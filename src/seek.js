@@ -1,47 +1,42 @@
 function SEEK($) {
 	let progressBar, seekKey;
 
-	$.createSeekLoop = function() {
-		return {
-			init: function() {
-				progressBar = document.getElementsByClassName("ytp-progress-bar")[0];
-			},
-			main: function() {
-				let videoId = getCurrentVideoId();
-				if (!videoId) {
-					seekKey = null;
-					return null;
-				}
-				let newSeekKey = "yt-magic/" + videoId;
+	$.seekLoop = {
+		init: function() {
+			progressBar = document.getElementsByClassName("ytp-progress-bar")[0];
+			if (!progressBar) {
+				throw Error("Progress bar not loaded yet!");
+			}
+		},
+		main: function() {
+			let videoId = getCurrentVideoId();
+			if (!videoId) {
+				seekKey = null;
+				return null;
+			}
+			let newSeekKey = "yt-magic/" + videoId;
 
-				if (newSeekKey === seekKey) {
-					try {
-						saveSeekPos();
-					} catch (e) {
-						$.print(e);
-					}
+			if (newSeekKey === seekKey) {
+				try {
+					saveSeekPos();
+				} catch (e) {
+					$.print(e);
+				}
+				return;
+			}
+
+			let seekValue = localStorage.getItem(newSeekKey);
+			if (seekValue) {
+				try {
+					showSeekDialogIfRequired(seekValue);
+				} catch (e) {
+					$.print(e);
 					return;
 				}
-
-				let seekValue = localStorage.getItem(newSeekKey);
-				if (seekValue) {
-					$.print(
-						"Shown seek dialog @",
-						$.prettyPercent(seekValue),
-						"for:",
-						newSeekKey
-					);
-					try {
-						showSeekDialogIfRequired(seekValue);
-					} catch (e) {
-						$.print(e);
-						return;
-					}
-				}
-
-				seekKey = newSeekKey;
 			}
-		};
+
+			seekKey = newSeekKey;
+		}
 	};
 
 	function showSeekDialogIfRequired(seekValue) {
@@ -79,7 +74,7 @@ function SEEK($) {
 			#yt-magic-confirm-dialog button {  
 				font-size: 18pt;
 				padding: 2px 10px;
-				margin: 10px 5px 0px 5px ;
+				margin: 10px 5px 0 5px ;
 				border-radius: 10px;
 			}
 		</style>
@@ -94,6 +89,8 @@ function SEEK($) {
 			</button>
 		</div>`
 		);
+
+		$.print("Showed seek dialog @", $.prettyPercent(seekValue));
 
 		let confirmDialog = document.getElementById("yt-magic-confirm-dialog");
 		let confirmNo = document.getElementById("yt-magic-confirm-seek-no");
@@ -156,14 +153,17 @@ function SEEK($) {
 	}
 
 	function saveSeekPos() {
-		let seekValue = getCurrentSeekValue();
-		if (seekValue <= 0) {
+		let seekValue;
+		try {
+			seekValue = getCurrentSeekValue();
+		} catch (e) {
+			$.print(e);
+		}
+		if (!seekValue || seekValue <= 0 || seekValue >= 1) {
 			return;
-		} else if (seekValue > 1) {
-			seekValue = 1;
 		}
 		localStorage.setItem(seekKey, seekValue);
-		$.print("Save seek position:", $.prettyPercent(seekValue), "for", seekKey);
+		// $.print("Save seek position:", $.prettyPercent(seekValue), "for", seekKey);
 	}
 
 	function getCurrentVideoId() {
@@ -174,31 +174,53 @@ function SEEK($) {
 		return getCurrentVideoPosSec() / getCurrentVideoDurationSec();
 	}
 
+	let _result;
+
 	function getCurrentVideoPosSec() {
-		return $.getVideoDataNode().cg;
+		if (!_result || Date.now() - _result.timestamp > 2500) {
+			let appNode = $.getPubSubInstance();
+			try {
+				for (let key of _result._appPathCache) {
+					appNode = appNode[key];
+				}
+			} catch {
+				appNode = null;
+			}
+			if (appNode) {
+				_result = $.findNode(appNode, k => k === "videoData");
+			} else {
+				_result = $.findNode($.getPubSubInstance(), k => k === "videoData");
+				_result._appPathCache = _result.path.slice(
+					0,
+					_result.path.indexOf("app") + 1
+				);
+			}
+			_result.timestamp = Date.now();
+		}
+		return _result.value.cg;
 	}
 
-	// A pesky hack.
-	// The total video duration seems to be at random places in the _yt_player object.
-	// So try em' all.
+	// A pesky hack
+	// The total video duration seems to hide at a few known places
+	// So try em' all
 	function getCurrentVideoDurationSec() {
 		try {
-			return _yt_player["u"]["ytPubsubPubsubInstance"]["subscriptions_"]["24"][
-				"da"
-			]["0"]["target"]["app"]["w"]["w"]["Tb"]["o"]["30"]["S"]["lengthSeconds"];
+			return $.getPubSubInstance()["subscriptions_"]["24"]["da"]["0"]["target"][
+				"app"
+			]["w"]["w"]["Tb"]["o"]["30"]["S"]["lengthSeconds"];
 		} catch {}
 
 		try {
-			return _yt_player["u"]["ytPubsubPubsubInstance"]["subscriptions_"]["24"][
-				"da"
-			]["0"]["target"]["app"]["u"]["G"]["Tb"]["o"]["3"]["Tb"]["o"]["12"][
-				"context"
-			]["videoData"]["Tb"]["o"]["3"]["w"]["B"]["duration"];
+			return $.getPubSubInstance()["subscriptions_"]["24"]["da"]["0"]["target"][
+				"app"
+			]["u"]["G"]["Tb"]["o"]["3"]["Tb"]["o"]["12"]["context"]["videoData"][
+				"Tb"
+			]["o"]["3"]["w"]["B"]["duration"];
 		} catch {}
 
-		return _yt_player["u"]["ytPubsubPubsubInstance"]["o"]["3"]["da"]["0"][
-			"target"
-		]["app"]["w"]["w"]["Tb"]["o"]["30"]["S"]["ia"]["duration"];
+		return $.getPubSubInstance()["o"]["3"]["da"]["0"]["target"]["app"]["w"][
+			"w"
+		]["Tb"]["o"]["30"]["S"]["ia"]["duration"];
 	}
 
 	return $;

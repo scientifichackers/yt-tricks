@@ -1,9 +1,9 @@
 function MAIN($) {
 	const tasks = [
-		{ createLoop: $.createSeekLoop, delayMs: 500 },
-		{ createLoop: $.createResizeLoop, delayMs: 100 }
+		{ loop: $.seekLoop, delayMs: 500 },
+		{ loop: $.resizeLoop, delayMs: 50 }
 	];
-	const minDelayMs = 100;
+	const minDelayMs = 50;
 
 	let loops = [];
 	let n = 1;
@@ -15,8 +15,8 @@ function MAIN($) {
 
 	function init() {
 		loops = [];
-		for (let { createLoop, delayMs } of tasks) {
-			let { init, main } = createLoop();
+		for (let { loop, delayMs } of tasks) {
+			let { init, main } = loop;
 			loops.push({
 				init,
 				main,

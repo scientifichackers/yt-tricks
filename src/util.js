@@ -9,32 +9,16 @@ function UTIL($) {
 		prettyPercent: function(seek) {
 			return (seek * 100).toFixed(2) + "%";
 		},
-		getVideoDataNode: function() {
-			let node = _yt_player;
-			let path = $.findNode(node, (k, v) => k === "videoData").path;
-			for (let key of path) {
-				node = node[key];
-			}
-			return node;
-		},
-		findNode: function(obj, testFn, all = false) {
-			let visited = new Set();
-			let found = [];
-			findNode(obj, testFn, visited, found, [], all);
-			if (all) {
-				return found;
-			} else {
-				return found[0] || null;
-			}
+		findNode: function(obj, testFn) {
+			return findNode(obj, testFn, new Set(), []);
 		}
 	});
 
-	function findNode(obj, testFn, visited, found, path, all) {
-		let key, value, entries, item, subPath;
-
-		if (obj === null || obj === undefined || visited.has(obj)) return;
+	function findNode(obj, testFn, visited, path) {
+		if (!obj || visited.has(obj)) return;
 		visited.add(obj);
 
+		let entries;
 		if (Array.isArray(obj)) {
 			entries = arrayEntries(obj);
 		} else if (typeof obj === "object") {
@@ -43,28 +27,15 @@ function UTIL($) {
 			return;
 		}
 
-		for ([key, value] of entries) {
-			key._isIndex = Array.isArray(obj);
-			subPath = [...path, key];
-
+		for (let [key, value] of entries) {
+			let subPath = [...path, key];
 			if (testFn(key, value)) {
-				item = {
-					value,
-					path: subPath,
-					access: subPath
-						.map(k => {
-							if (!k._isIndex) {
-								k = `'${k}'`;
-							}
-							return `[${k}]`;
-						})
-						.join("")
-				};
-				found.push(item);
-				if (!all) return;
+				return { value, path: subPath };
 			}
-
-			findNode(value, testFn, visited, found, subPath, all);
+			let node = findNode(value, testFn, visited, subPath);
+			if (node) {
+				return node;
+			}
 		}
 	}
 
