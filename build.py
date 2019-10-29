@@ -122,8 +122,8 @@ def main():
             host='0.0.0.0',
             port=PORT,
             # reload=True,
-            ssl_keyfile='/Users/Dev/0.0.0.0-key.pem',
-            ssl_certfile='/Users/Dev/0.0.0.0.pem',
+            ssl_keyfile='./0.0.0.0-key.pem',
+            ssl_certfile='./0.0.0.0.pem',
         )
 
 
