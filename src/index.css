@@ -1,0 +1,22 @@
+.ytp-progress-bar {
+  height: 15px !important;
+}
+
+.ytp-preview {
+  max-width: initial !important;
+  max-height: initial !important;
+  padding: 5px !important;
+}
+
+.ytp-tooltip-bg {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.ytp-scrubber-button {
+  display: none !important;
+}
+
+.force-hide {
+  display: none !important;
+}

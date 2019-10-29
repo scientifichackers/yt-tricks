@@ -1,0 +1,19 @@
+{
+  "name": "YT Tricks",
+  "version": "0.0.1",
+  "description": "Collection of neat Youtube tricks!",
+  "permissions": ["storage", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["https://*.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.youtube.com/*"],
+      "css": ["src/index.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "manifest_version": 2
+}
