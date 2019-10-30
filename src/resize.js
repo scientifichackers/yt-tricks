@@ -8,7 +8,6 @@ function RESIZE($) {
 
 			customTooltip = origTooltip.cloneNode();
 			origTooltip.classList.add("display-none");
-			origTooltip.setAttribute("mother", "fucker");
 
 			container = origTooltip.parentNode;
 			container.insertBefore(customTooltip, origTooltip.nextSibling);

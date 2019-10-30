@@ -10,11 +10,11 @@ function UTIL($) {
 			return (seek * 100).toFixed(2) + "%";
 		},
 		findNode: function(obj, testFn) {
-			return findNode(obj, testFn, new Set(), []);
+			return rFindNode(obj, testFn, new Set(), []);
 		}
 	});
 
-	function findNode(obj, testFn, visited, path) {
+	function* rFindNode(obj, testFn, visited, path) {
 		if (!obj || visited.has(obj)) return;
 		visited.add(obj);
 
@@ -30,11 +30,13 @@ function UTIL($) {
 		for (let [key, value] of entries) {
 			let subPath = [...path, key];
 			if (testFn(key, value)) {
-				return { value, path: subPath };
+				yield { key, value, path: subPath };
 			}
-			let node = findNode(value, testFn, visited, subPath);
-			if (node) {
-				return node;
+			let nodes = rFindNode(value, testFn, visited, subPath);
+			if (nodes) {
+				for (let node of nodes) {
+					yield node;
+				}
 			}
 		}
 	}

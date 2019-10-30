@@ -178,26 +178,20 @@ function SEEK($) {
 
 	function getCurrentVideoPosSec() {
 		if (!_result || Date.now() - _result.timestamp > 2500) {
-			let appNode = $.getPubSubInstance();
-			try {
-				for (let key of _result._appPathCache) {
-					appNode = appNode[key];
-				}
-			} catch {
-				appNode = null;
-			}
-			if (appNode) {
-				_result = $.findNode(appNode, k => k === "videoData");
-			} else {
-				_result = $.findNode($.getPubSubInstance(), k => k === "videoData");
-				_result._appPathCache = _result.path.slice(
-					0,
-					_result.path.indexOf("app") + 1
-				);
-			}
+			_result = $.findNode(
+				$.getPubSubInstance(),
+				(k, v) => v && v.constructor && v.constructor.name === "Sea"
+			).next().value;
 			_result.timestamp = Date.now();
 		}
-		return _result.value.cg;
+		let values = Object.values(_result.value).filter(
+			v => typeof v === "number"
+		);
+		let min = Math.min(...values);
+		if (!min) {
+			throw Error("Current video position not found!");
+		}
+		return min;
 	}
 
 	// A pesky hack
