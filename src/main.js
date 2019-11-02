@@ -1,9 +1,9 @@
 function MAIN($) {
 	const tasks = [
 		{ loop: $.seekLoop, delayMs: 500 },
-		{ loop: $.resizeLoop, delayMs: 50 }
+		{ loop: $.resizeLoop, delayMs: 100 }
 	];
-	const minDelayMs = 50;
+	const minDelayMs = 100;
 
 	let loops = [];
 	let n = 1;

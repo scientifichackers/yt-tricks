@@ -1,8 +1,10 @@
 function SEEK($) {
-	let progressBar, seekKey;
+	let progressBar, seekKey, videoLenCache, videoPosCache;
 
 	$.seekLoop = {
 		init: function() {
+			videoLenCache = null;
+			videoPosCache = null;
 			progressBar = document.getElementsByClassName("ytp-progress-bar")[0];
 			if (!progressBar) {
 				throw Error("Progress bar not loaded yet!");
@@ -174,17 +176,15 @@ function SEEK($) {
 		return getCurrentVideoPosSec() / getCurrentVideoDurationSec();
 	}
 
-	let _videoPosCache;
-
 	function getCurrentVideoPosSec() {
-		if (!_videoPosCache || Date.now() - _videoPosCache.timestamp > 2500) {
-			_videoPosCache = $.findNode(
+		if (!videoPosCache || Date.now() - videoPosCache.timestamp > 3000) {
+			videoPosCache = $.findNode(
 				$.ytPlayer,
 				(k, v) => v && v.constructor && v.constructor.name === "Sea"
 			).next().value;
-			_videoPosCache.timestamp = Date.now();
+			videoPosCache.timestamp = Date.now();
 		}
-		let values = Object.values(_videoPosCache.value).filter(
+		let values = Object.values(videoPosCache.value).filter(
 			v => typeof v === "number"
 		);
 		let min = Math.min(...values);
@@ -194,20 +194,15 @@ function SEEK($) {
 		return min;
 	}
 
-	let _videoDurationCache;
-
 	function getCurrentVideoDurationSec() {
-		if (
-			!_videoDurationCache ||
-			Date.now() - _videoDurationCache.timestamp > 2500
-		) {
-			_videoDurationCache = $.findNode(
+		if (!videoLenCache || Date.now() - videoLenCache.timestamp > 5000) {
+			videoLenCache = $.findNode(
 				$.ytPlayer,
 				(k, v) => v && typeof v === "number" && k === "lengthSeconds"
 			).next().value;
-			_videoDurationCache.timestamp = Date.now();
+			videoLenCache.timestamp = Date.now();
 		}
-		return _videoDurationCache.value;
+		return videoLenCache.value;
 	}
 
 	return $;
