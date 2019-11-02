@@ -1,5 +1,5 @@
 const YT_TRICKS = {
 	scaleFactor: 4,
-	getPubSubInstance: () => _yt_player.u.ytPubsubPubsubInstance
+	ytPlayer: _yt_player
 };
 MAIN(RESIZE(SEEK(UTIL(YT_TRICKS))));

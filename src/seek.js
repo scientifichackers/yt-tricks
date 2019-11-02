@@ -174,17 +174,17 @@ function SEEK($) {
 		return getCurrentVideoPosSec() / getCurrentVideoDurationSec();
 	}
 
-	let _result;
+	let _videoPosCache;
 
 	function getCurrentVideoPosSec() {
-		if (!_result || Date.now() - _result.timestamp > 2500) {
-			_result = $.findNode(
-				$.getPubSubInstance(),
+		if (!_videoPosCache || Date.now() - _videoPosCache.timestamp > 2500) {
+			_videoPosCache = $.findNode(
+				$.ytPlayer,
 				(k, v) => v && v.constructor && v.constructor.name === "Sea"
 			).next().value;
-			_result.timestamp = Date.now();
+			_videoPosCache.timestamp = Date.now();
 		}
-		let values = Object.values(_result.value).filter(
+		let values = Object.values(_videoPosCache.value).filter(
 			v => typeof v === "number"
 		);
 		let min = Math.min(...values);
@@ -194,27 +194,20 @@ function SEEK($) {
 		return min;
 	}
 
-	// A pesky hack
-	// The total video duration seems to hide at a few known places
-	// So try em' all
+	let _videoDurationCache;
+
 	function getCurrentVideoDurationSec() {
-		try {
-			return $.getPubSubInstance()["subscriptions_"]["24"]["da"]["0"]["target"][
-				"app"
-			]["w"]["w"]["Tb"]["o"]["30"]["S"]["lengthSeconds"];
-		} catch {}
-
-		try {
-			return $.getPubSubInstance()["subscriptions_"]["24"]["da"]["0"]["target"][
-				"app"
-			]["u"]["G"]["Tb"]["o"]["3"]["Tb"]["o"]["12"]["context"]["videoData"][
-				"Tb"
-			]["o"]["3"]["w"]["B"]["duration"];
-		} catch {}
-
-		return $.getPubSubInstance()["o"]["3"]["da"]["0"]["target"]["app"]["w"][
-			"w"
-		]["Tb"]["o"]["30"]["S"]["ia"]["duration"];
+		if (
+			!_videoDurationCache ||
+			Date.now() - _videoDurationCache.timestamp > 2500
+		) {
+			_videoDurationCache = $.findNode(
+				$.ytPlayer,
+				(k, v) => v && typeof v === "number" && k === "lengthSeconds"
+			).next().value;
+			_videoDurationCache.timestamp = Date.now();
+		}
+		return _videoDurationCache.value;
 	}
 
 	return $;
