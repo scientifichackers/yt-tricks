@@ -1,6 +1,6 @@
 {
   "name": "YT Tricks",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Collection of neat Youtube tricks!",
   "permissions": ["storage", "activeTab"],
   "content_scripts": [
